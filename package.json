@@ -13,7 +13,7 @@
     "url": "https://github.com/wnynya/Wanyne-Auth.git"
   },
   "dependencies": {
-    "@wanyne/orm": "^0.1.11",
+    "@wanyne/orm": "^0.1.12",
     "uuid": "^11.1.0"
   }
 }
