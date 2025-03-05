@@ -1,0 +1,19 @@
+{
+  "name": "@wanyne/auth",
+  "version": "0.1.0",
+  "description": "Wanyne Auth",
+  "author": "Wany <sung@wanyne.com> (https://wanyne.com)",
+  "main": "./src/index.mjs",
+  "keywords": [
+    "wanyne"
+  ],
+  "homepage": "https://github.com/wnynya/Wanyne-Auth#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wnynya/Wanyne-Auth.git"
+  },
+  "dependencies": {
+    "@wanyne/orm": "^0.1.11",
+    "uuid": "^11.1.0"
+  }
+}
