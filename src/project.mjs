@@ -3,7 +3,6 @@
 import { DatabaseClass, FieldType, FieldFlag } from '@wanyne/orm';
 import Crypto from './modules/crypto.mjs';
 import WanyneElement from './element.mjs';
-import WanyneSession from './session.mjs';
 
 class WanyneAccount extends DatabaseClass {
   static #table;
@@ -29,12 +28,12 @@ class WanyneAccount extends DatabaseClass {
     return this.#table;
   }
 
-  constructor(wanyneElement = new WanyneElement()) {
+  constructor(authelement = new WanyneElement()) {
     super(WanyneAccount.table, ['element']);
 
-    this.wanyneElement = wanyneElement;
+    this.authelement = authelement;
 
-    this.element = this.wanyneElement.uuid;
+    this.element = this.authelement.uuid;
     this.username = null;
     this.passhash = null;
     this.passsalt = this.#crypt(Date.now());
@@ -42,22 +41,22 @@ class WanyneAccount extends DatabaseClass {
 
   async create(password) {
     this.passhash = this.#crypt(password);
-    await this.wanyneElement.create();
+    await this.authelement.create();
     await this._create();
   }
 
   async read() {
     await this._read();
-    this.wanyneElement = await WanyneElement.of(this.element);
+    this.authelement = await WanyneElement.of(this.element);
   }
 
   async update() {
-    await this.wanyneElement.update();
+    await this.authelement.update();
     await this._update();
   }
 
   async delete() {
-    await this.wanyneElement.delete();
+    await this.authelement.delete();
     await this._delete();
   }
 
@@ -76,15 +75,15 @@ class WanyneAccount extends DatabaseClass {
   // element
 
   addPermission(...args) {
-    this.wanyneElement.addPermission(...args);
+    this.authelement.addPermission(...args);
   }
 
   removePermission(...args) {
-    this.wanyneElement.removePermissions(...args);
+    this.authelement.removePermissions(...args);
   }
 
   hasPermission(...args) {
-    return this.wanyneElement.hasPermission(...args);
+    return this.authelement.hasPermission(...args);
   }
 
   static async of(element) {
@@ -109,13 +108,13 @@ class WanyneAccount extends DatabaseClass {
   // sessions
 
   async createSession(expire) {
-    const session = new WanyneSession(this.wanyneElement, expire);
+    const session = new AuthSession(this.authelement, expire);
     await session.create();
     return session;
   }
 
   async readSessions() {
-    const results = await WanyneSession.table.read({
+    const results = await AuthSession.table.read({
       record: ['sid'],
       filter: {
         element: this.element,
@@ -123,7 +122,7 @@ class WanyneAccount extends DatabaseClass {
     });
     const tasks = [];
     for (const res of results) {
-      tasks.push(WanyneSession.of(res.sid));
+      tasks.push(AuthSession.of(res.sid));
     }
     return await Promise.all(tasks);
   }

@@ -1,7 +1,9 @@
-import { DatabaseClass, FieldType, FieldFlag } from '@wanyne/orm';
-import { v4 as uuidv4 } from 'uuid';
+'use strict';
 
-class AuthElement extends DatabaseClass {
+import { DatabaseClass, FieldType, FieldFlag } from '@wanyne/orm';
+import Crypto from './modules/crypto.mjs';
+
+class WanyneElement extends DatabaseClass {
   static #table;
   static async init(database) {
     this.#table = await database.setTable('authelement', {
@@ -19,9 +21,9 @@ class AuthElement extends DatabaseClass {
   }
 
   constructor(expire = null) {
-    super(AuthElement.#table, ['uuid']);
+    super(WanyneElement.table, ['uuid']);
 
-    this.uuid = uuidv4();
+    this.uuid = Crypto.uuid();
     this.permissions = [];
     this.createdatetime = new Date();
     this.modifydatetime = this.createdatetime;
@@ -48,7 +50,7 @@ class AuthElement extends DatabaseClass {
   }
 
   static async of(uuid) {
-    const element = new AuthElement();
+    const element = new WanyneElement();
     element.uuid = uuid;
     await element.read();
     return element;
@@ -96,5 +98,4 @@ function check(source, target) {
   return bool;
 }
 
-export default AuthElement;
-export { AuthElement };
+export default WanyneElement;

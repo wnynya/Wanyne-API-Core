@@ -12,15 +12,33 @@ const database = new Database(
 );
 
 async function init() {
+  await database.client.query('DROP TABLE `authsession`').catch(() => {});
+  await database.client.query('DROP TABLE `authaccount`').catch(() => {});
+  await database.client.query('DROP TABLE `authelement`').catch(() => {});
+
   await Auth.init(database);
 
   let t = new AuthAccount();
 
   t.username = 'test';
 
-  //await t.create('1234');
+  await t.create('1234');
 
-  t = await AuthAccount.of('66ef1683-f4e0-4c7c-bb09-d69c4c066c05');
+  const tt = await AuthAccount.ofUsername('test');
+  tt.addPermission('test.*');
+  await tt.update();
+
+  await tt.createSession();
+  await tt.createSession();
+
+  const sess = await tt.readSessions();
+
+  console.log(sess[0].element);
+  console.log(sess[1].hasPermission('test.a.b'));
+
+  await tt.clearSessions();
+
+  console.log(await tt.readSessions());
 
   //console.log(t.element.toJSON());
   //console.log(t.toJSON());
