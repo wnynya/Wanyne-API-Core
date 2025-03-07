@@ -1,6 +1,6 @@
 {
   "name": "@wanyne/api-core",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Wanyne API root",
   "author": "Wany <sung@wanyne.com> (https://wanyne.com)",
   "main": "./src/index.mjs",
@@ -13,7 +13,6 @@
     "url": "https://github.com/wnynya/Wanyne-Auth.git"
   },
   "dependencies": {
-    "@wanyne/orm": "^0.1.13",
-    "uuid": "^11.1.0"
+    "@wanyne/orm": "^0.1.15"
   }
 }

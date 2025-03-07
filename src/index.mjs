@@ -1,18 +1,22 @@
-import WanyneElement from './element.mjs';
 import WanyneAccount from './account.mjs';
 import WanyneSession from './session.mjs';
 
+import session from './middlewares/session.mjs';
+import account from './middlewares/account.mjs';
+
 async function init(database) {
-  await WanyneElement.init(database);
   await WanyneAccount.init(database);
   await WanyneSession.init(database);
 }
 
 export default {
+  WanyneAccount: WanyneAccount,
+  WanyneSession: WanyneSession,
   init: init,
-  AuthElement: WanyneElement,
-  AuthAccount: WanyneAccount,
-  AuthSession: WanyneSession,
+  middlewares: {
+    session: session,
+    account: account,
+  },
 };
 
-export { WanyneElement as AuthElement, WanyneAccount as AuthAccount };
+export { WanyneAccount, WanyneSession };

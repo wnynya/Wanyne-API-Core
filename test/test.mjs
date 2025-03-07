@@ -1,5 +1,9 @@
 import { Database, DatabaseClient } from '@wanyne/orm';
-import { default as Auth, AuthAccount, AuthElement } from '../src/index.mjs';
+import {
+  default as Auth,
+  WanyneAccount,
+  WanyneSession,
+} from '../src/index.mjs';
 
 const database = new Database(
   new DatabaseClient.MySQL({
@@ -18,27 +22,32 @@ async function init() {
 
   await Auth.init(database);
 
-  let t = new AuthAccount();
+  let t = new WanyneAccount();
 
   t.username = 'test';
+  t.updatePassword('1234');
 
-  await t.create('1234');
+  await t.create();
 
-  const tt = await AuthAccount.ofUsername('test');
+  const tt = await WanyneAccount.ofAny('test');
   tt.addPermission('test.*');
   await tt.update();
 
-  await tt.createSession();
-  await tt.createSession();
+  console.log(tt.hasPermission('test.a.b'));
 
-  const sess = await tt.readSessions();
+  const s = new WanyneSession();
 
-  console.log(sess[0].element);
-  console.log(sess[1].hasPermission('test.a.b'));
+  s.account = tt.uuid;
+  await s.create();
 
-  await tt.clearSessions();
+  const ss = await WanyneSession.of(s.sid);
 
-  console.log(await tt.readSessions());
+  console.log(s.sid);
+  console.log(ss.sid, ss.toJSON());
+
+  const sa = await WanyneAccount.of(ss.account);
+  console.log(sa.toJSON());
+  console.log(sa.hasPermission('test.c.b'));
 
   //console.log(t.element.toJSON());
   //console.log(t.toJSON());
@@ -48,8 +57,6 @@ async function init() {
   //t.addPermission('test.*');
 
   //await t.update();
-
-  console.log(t.hasPermission('test.a.b'));
 
   console.log('-------- END --------');
 }

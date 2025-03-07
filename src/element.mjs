@@ -1,59 +1,33 @@
 'use strict';
 
-import { DatabaseClass, FieldType, FieldFlag } from '@wanyne/orm';
+import { DatabaseClass } from '@wanyne/orm';
 import Crypto from './modules/crypto.mjs';
 
 class WanyneElement extends DatabaseClass {
-  static #table;
-  static async init(database) {
-    this.#table = await database.setTable('authelement', {
-      uuid: [FieldType.STRING(64), FieldFlag.NOTNULL(), FieldFlag.PRIMARY()],
-      permissions: [FieldType.JSON(), FieldFlag.NOTNULL()],
-      createdatetime: [FieldType.DATETIME(), FieldFlag.NOTNULL()],
-      modifydatetime: [FieldType.DATETIME(), FieldFlag.NOTNULL()],
-      accessdatetime: [FieldType.DATETIME()],
-      expiredatetime: [FieldType.DATETIME()],
-    });
-    return this.#table;
-  }
-  static get table() {
-    return this.#table;
-  }
+  constructor(superArgs, uuid = Crypto.uuid()) {
+    super(...superArgs);
 
-  constructor(expire = null) {
-    super(WanyneElement.table, ['uuid']);
-
-    this.uuid = Crypto.uuid();
+    this.uuid = uuid;
     this.permissions = [];
     this.createdatetime = new Date();
-    this.modifydatetime = this.createdatetime;
-    this.accessdatetime = null;
-    this.expiredatetime = expire;
   }
 
   addPermission(perm) {
     if (!this.permissions.includes(perm)) {
       this.permissions.push(perm);
     }
-    this.modifyDatetime = new Date();
+    this.modifydatetime = new Date();
   }
 
   removePermission(perm) {
     if (!this.permissions.includes(perm)) {
       this.permissions.splice(this.permissions.indexOf(perm), 1);
     }
-    this.modifyDatetime = new Date();
+    this.modifydatetime = new Date();
   }
 
   hasPermission(perm) {
     return has(this.permissions, perm);
-  }
-
-  static async of(uuid) {
-    const element = new WanyneElement();
-    element.uuid = uuid;
-    await element.read();
-    return element;
   }
 }
 

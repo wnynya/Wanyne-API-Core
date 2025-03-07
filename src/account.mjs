@@ -1,24 +1,20 @@
 'use strict';
 
-import { DatabaseClass, FieldType, FieldFlag } from '@wanyne/orm';
+import { FieldType, FieldFlag } from '@wanyne/orm';
 import Crypto from './modules/crypto.mjs';
 import WanyneElement from './element.mjs';
 import WanyneSession from './session.mjs';
 
-class WanyneAccount extends DatabaseClass {
+class WanyneAccount extends WanyneElement {
   static #table;
   static async init(database) {
     this.#table = await database.setTable('authaccount', {
-      element: [
-        FieldType.STRING(64),
-        FieldFlag.NOTNULL(),
-        FieldFlag.PRIMARY(),
-        FieldFlag.FOREIGN(
-          WanyneElement.table.field('uuid'),
-          'CASCADE',
-          'CASCADE'
-        ),
-      ],
+      uuid: [FieldType.STRING(64), FieldFlag.NOTNULL(), FieldFlag.PRIMARY()],
+      permissions: [FieldType.JSON(), FieldFlag.NOTNULL()],
+      createdatetime: [FieldType.DATETIME(), FieldFlag.NOTNULL()],
+      modifydatetime: [FieldType.DATETIME()],
+      accessdatetime: [FieldType.DATETIME()],
+
       username: [FieldType.STRING(32), FieldFlag.NOTNULL(), FieldFlag.UNIQUE()],
       passhash: [FieldType.STRING(128), FieldFlag.NOTNULL()],
       passsalt: [FieldType.STRING(128), FieldFlag.NOTNULL()],
@@ -29,36 +25,12 @@ class WanyneAccount extends DatabaseClass {
     return this.#table;
   }
 
-  constructor(wanyneElement = new WanyneElement()) {
-    super(WanyneAccount.table, ['element']);
+  constructor(uuid = Crypto.uuid()) {
+    super([WanyneAccount.table, ['uuid']], uuid);
 
-    this.wanyneElement = wanyneElement;
-
-    this.element = this.wanyneElement.uuid;
     this.username = null;
     this.passhash = null;
     this.passsalt = this.#crypt(Date.now());
-  }
-
-  async create(password) {
-    this.passhash = this.#crypt(password);
-    await this.wanyneElement.create();
-    await this._create();
-  }
-
-  async read() {
-    await this._read();
-    this.wanyneElement = await WanyneElement.of(this.element);
-  }
-
-  async update() {
-    await this.wanyneElement.update();
-    await this._update();
-  }
-
-  async delete() {
-    await this.wanyneElement.delete();
-    await this._delete();
   }
 
   #crypt(data) {
@@ -73,46 +45,35 @@ class WanyneAccount extends DatabaseClass {
     this.passhash = this.#crypt(password);
   }
 
-  // element
-
-  addPermission(...args) {
-    this.wanyneElement.addPermission(...args);
-  }
-
-  removePermission(...args) {
-    this.wanyneElement.removePermissions(...args);
-  }
-
-  hasPermission(...args) {
-    return this.wanyneElement.hasPermission(...args);
-  }
-
-  static async of(element) {
-    const account = new WanyneAccount();
-    account.element = element;
+  static async of(uuid) {
+    const account = new WanyneAccount(uuid);
     await account.read();
     return account;
   }
 
-  static async ofUsername(username) {
+  static async ofAny(data) {
     const results = await WanyneAccount.table.read({
-      record: ['element'],
+      record: ['uuid'],
       filter: {
-        username: username,
+        fields: [
+          {
+            uuid: data,
+          },
+          {
+            username: data,
+          },
+        ],
       },
     });
-    return await WanyneAccount.of(results[0].element);
+    if (results.length <= 0) {
+      throw new Error('default404');
+    }
+    return await WanyneAccount.of(results[0].uuid);
   }
 
   static async index() {}
 
   // sessions
-
-  async createSession(expire) {
-    const session = new WanyneSession(this.wanyneElement, expire);
-    await session.create();
-    return session;
-  }
 
   async readSessions() {
     const results = await WanyneSession.table.read({
@@ -136,12 +97,6 @@ class WanyneAccount extends DatabaseClass {
     }
     await Promise.all(tasks);
   }
-
-  // projects
-
-  async createProject() {}
-
-  async readProjects() {}
 }
 
 export default WanyneAccount;

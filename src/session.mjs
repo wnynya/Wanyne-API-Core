@@ -2,26 +2,26 @@
 
 import { DatabaseClass, FieldType, FieldFlag } from '@wanyne/orm';
 import Crypto from './modules/crypto.mjs';
-import WanyneElement from './element.mjs';
+import WanyneAccount from './account.mjs';
 
 class WanyneSession extends DatabaseClass {
   static #table;
   static async init(database) {
     this.#table = await database.setTable('authsession', {
       sid: [FieldType.STRING(256), FieldFlag.NOTNULL(), FieldFlag.PRIMARY()],
-      element: [
+      account: [
         FieldType.STRING(64),
-        FieldFlag.NOTNULL(),
         FieldFlag.FOREIGN(
-          WanyneElement.table.field('uuid'),
+          WanyneAccount.table.field('uuid'),
           'CASCADE',
           'CASCADE'
         ),
       ],
+      body: [FieldType.JSON()],
       createdatetime: [FieldType.DATETIME(), FieldFlag.NOTNULL()],
       accessdatetime: [FieldType.DATETIME()],
       expiredatetime: [FieldType.DATETIME()],
-      ip: [FieldType.DATETIME(64)],
+      ip: [FieldType.STRING(64)],
       useragent: [FieldType.STRING(512)],
       logs: [FieldType.JSON()],
     });
@@ -31,42 +31,21 @@ class WanyneSession extends DatabaseClass {
     return this.#table;
   }
 
-  constructor(wanyneElement, expire = null) {
+  constructor(sid = Crypto.randomString(42)) {
     super(WanyneSession.table, ['sid']);
 
-    this.wanyneElement = wanyneElement;
-
-    this.sid = Crypto.randomString(42);
-    this.element = this.wanyneElement?.uuid;
+    this.sid = sid;
+    this.body = {};
     this.createdatetime = new Date();
-    this.accessdatetime = new Date();
-    this.expiredatetime = expire;
-    this.logs = '{}';
-  }
+    this.logs = {};
 
-  async read() {
-    await this._read();
-    this.wanyneElement = await WanyneElement.of(this.element);
-  }
-
-  // element
-
-  addPermission(...args) {
-    this.wanyneElement.addPermission(...args);
-  }
-
-  removePermission(...args) {
-    this.wanyneElement.removePermissions(...args);
-  }
-
-  hasPermission(...args) {
-    return this.wanyneElement.hasPermission(...args);
+    this.new = true;
   }
 
   static async of(sid) {
-    const session = new WanyneSession();
-    session.sid = sid;
+    const session = new WanyneSession(sid);
     await session.read();
+    session.new = false;
     return session;
   }
 }
