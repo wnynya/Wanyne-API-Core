@@ -33,6 +33,13 @@ class WanyneAccount extends WanyneElement {
     this.passsalt = this.#crypt(Date.now());
   }
 
+  toJSON() {
+    const res = this._toJSON();
+    delete res.passhash;
+    delete res.passsalt;
+    return res;
+  }
+
   #crypt(data) {
     return new Crypto(data).salt(this.passsalt || '').hash('SHA-512');
   }
